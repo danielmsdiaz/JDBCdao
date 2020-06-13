@@ -1,5 +1,6 @@
 package application;
 
+import java.util.Date;
 import java.util.List;
 
 import db.DB;
@@ -13,11 +14,9 @@ public class Program {
 	public static void main(String[] args) {
 		
 		SellerDao sellerDao = DaoFactory.createSellerDao();
-		List<Seller> seller = sellerDao.findAll();
-		for(int i = 0; i < seller.size(); i++) {
-			System.out.println(seller.get(i));
-		}
-		DB.closeConnection();
+		Seller seller = new Seller(null, "pedro", "pedro@hotmail.com", new Date(), 3000.0, new Department(1, null));
+		seller = sellerDao.findById(1);
+		sellerDao.deleteById(2);
 		
 		
 	}

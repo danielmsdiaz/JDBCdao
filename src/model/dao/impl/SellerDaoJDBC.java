@@ -1,15 +1,16 @@
 package model.dao.impl;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.print.attribute.HashAttributeSet;
 
 import db.DB;
 import db.DbException;
@@ -20,6 +21,7 @@ import model.entities.Seller;
 public class SellerDaoJDBC implements SellerDao {
 
 	private Connection conn;
+	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
 	public SellerDaoJDBC(Connection conn) {
 		this.conn = conn;
@@ -27,19 +29,82 @@ public class SellerDaoJDBC implements SellerDao {
 
 	@Override
 	public void insert(Seller seller) {
-		// TODO Auto-generated method stub
+		PreparedStatement st = null;
+
+		String query = "INSERT INTO seller "
+				+ "(Name, Email, BirthDate, BaseSalary, DepartmentId) "
+				+ "VALUES "
+				+ "(?, ?, ?, ?, ?)";
+		try {
+			st = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, seller.getName());
+			st.setString(2, seller.getEmail());
+			st.setDate(3, new Date(seller.getBirthDate().getTime()));
+			st.setDouble(4, seller.getBaseSalary());
+			st.setInt(5, seller.getDepartment().getId());
+			int rowsAffected = st.executeUpdate();
+			
+			if(rowsAffected > 0) {
+				ResultSet rs = st.getGeneratedKeys();
+				if(rs.next() == true) {
+					int id = rs.getInt(1);
+					seller.setId(id);
+				}
+				DB.closeResultSet(rs);
+			}
+		
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
 	@Override
 	public void update(Seller seller) {
-		// TODO Auto-generated method stub
+		PreparedStatement st = null;
+
+		String query = "UPDATE seller "
+				+ "SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? "
+				+ "WHERE Id = ? ";
+		try {
+			st = conn.prepareStatement(query);
+			st.setString(1, seller.getName());
+			st.setString(2, seller.getEmail());
+			st.setDate(3, new Date(seller.getBirthDate().getTime()));
+			st.setDouble(4, seller.getBaseSalary());
+			st.setInt(5, seller.getDepartment().getId());
+			st.setInt(6, seller.getId());
+			st.executeUpdate();
+		
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
 	@Override
 	public void deleteById(Integer id) {
-		// TODO Auto-generated method stub
+		PreparedStatement st = null;
+
+		String query = "DELETE FROM seller "
+					 + " WHERE Id = ? ";
+		try {
+			st = conn.prepareStatement(query);
+			st.setInt(1, id);
+			int rows = st.executeUpdate();
+			if(rows == 0) {
+				throw new DbException("Não existe esse id");
+			}
+		
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
@@ -49,8 +114,10 @@ public class SellerDaoJDBC implements SellerDao {
 		ResultSet rs = null;
 
 		// comandos sql gravados numa string
-		String query = "SELECT seller.*,department.Name as DepName " + "FROM seller INNER JOIN department "
-				+ "ON seller.DepartmentId = department.Id " + "WHERE seller.Id = ? ";
+		String query = "SELECT seller.*,department.Name as DepName " 
+		+ "FROM seller INNER JOIN department "
+		+ "ON seller.DepartmentId = department.Id " 
+		+ "WHERE seller.Id = ? ";
 		try {
 
 			st = conn.prepareStatement(query); // filtro realizado
@@ -107,6 +174,7 @@ public class SellerDaoJDBC implements SellerDao {
 		try {
 			st = conn.prepareStatement(query);
 			rs = st.executeQuery();
+			
 			ArrayList<Seller> list = new ArrayList<>();
 			Map<Integer, Department> map = new HashMap<>();
 			
