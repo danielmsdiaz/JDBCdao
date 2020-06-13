@@ -42,30 +42,24 @@ public class SellerDaoJDBC implements SellerDao{
 	public Seller findById(Integer id){
 		PreparedStatement st =	null;
 		ResultSet rs = null;
+		
+		// comandos sql gravados numa string
 		String query = "SELECT seller.*,department.Name as DepName "
 				+ "FROM seller INNER JOIN department "
 				+ "ON seller.DepartmentId = department.Id "
 				+ "WHERE seller.Id = ? ";
 		try {
 			
-			st = conn.prepareStatement(query);
-			st.setInt(1, id);
-			rs = st.executeQuery();
+			st = conn.prepareStatement(query); //filtro realizado
+			st.setInt(1, id); // mudando o valor de ? pelo paramentro
+			rs = st.executeQuery(); //executando a mudanca
 			
-			if(rs.next() == true) {
+			if(rs.next() == true) { //checando se houve algum resultado
 				
-				Department dep = new Department();
-				Seller seller = new Seller();
+				//o result set tem formato de tabela, entao tem q transformar em objeto
 				
-				dep.setId(rs.getInt("DepartmentId"));
-				dep.setName(rs.getString("DepName"));
-				
-				seller.setId(rs.getInt("Id"));
-				seller.setName(rs.getString("Name"));
-				seller.setEmail(rs.getString("Email"));
-				seller.setBirthDate(rs.getDate("BirthDate"));
-				seller.setBaseSalary(rs.getDouble("BaseSalary"));
-				seller.setDepartment(dep);
+				Department dep = instantiateDepartment(rs);
+				Seller seller = instantiateSeller(rs,dep);
 				return seller;
 			}
 			else {
@@ -79,6 +73,25 @@ public class SellerDaoJDBC implements SellerDao{
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
 		}
+		
+	}
+
+	private Seller instantiateSeller(ResultSet rs, Department dep) throws SQLException {
+		Seller seller = new Seller();
+		seller.setId(rs.getInt("Id"));
+		seller.setName(rs.getString("Name"));
+		seller.setEmail(rs.getString("Email"));
+		seller.setBirthDate(rs.getDate("BirthDate"));
+		seller.setBaseSalary(rs.getDouble("BaseSalary"));
+		seller.setDepartment(dep);
+		return seller;
+	}
+
+	private Department instantiateDepartment(ResultSet rs) throws SQLException{
+		Department dep = new Department();
+		dep.setId(rs.getInt("DepartmentId"));
+		dep.setName(rs.getString("DepName"));
+		return dep;
 		
 	}
 
