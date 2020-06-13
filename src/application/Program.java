@@ -13,7 +13,7 @@ public class Program {
 	public static void main(String[] args) {
 		
 		SellerDao sellerDao = DaoFactory.createSellerDao();
-		List<Seller> seller = sellerDao.findByDepartment(new Department(2));
+		List<Seller> seller = sellerDao.findAll();
 		for(int i = 0; i < seller.size(); i++) {
 			System.out.println(seller.get(i));
 		}
